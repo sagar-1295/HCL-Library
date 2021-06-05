@@ -16,10 +16,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.library.hcl.exception.BookNotFoundException;
+import com.library.hcl.exception.ErrorResponse;
+import com.library.hcl.exception.MemberNotFoundException;
 import com.library.hcl.model.Book;
 import com.library.hcl.model.Member;
 import com.library.hcl.repo.BookRepo;
@@ -90,6 +95,12 @@ public class BookController {
 			if (bookId != null && memberId != null) {
 				Optional<Book> book = repo.findById(bookId);
 				Optional<Member> member = memberRepo.findById(memberId);
+				if (!book.isPresent()) {
+					throw new BookNotFoundException();
+				}
+				if (!member.isPresent()) {
+					throw new MemberNotFoundException();
+				}
 				if (book.isPresent() && member.isPresent() && member.get().getBookCount() != null &&
 						member.get().getBookCount() != 0 && book.get().getStatus().equals("Available")) {
 					Member mem = member.get();
@@ -117,4 +128,15 @@ public class BookController {
 		c.add(Calendar.DATE, 14); 
 		return sdf.format(c.getTime());
 	}
+	
+	@PostMapping(value = "/inventory", produces = "application/json;charset=utf-8")
+	public ResponseEntity<Book> addBook(@RequestBody Book book) {
+		try {
+			repo.save(book);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return new ResponseEntity<Book>(book, new HttpHeaders(), HttpStatus.OK);
+	}
+
 }
