@@ -83,9 +83,9 @@ public class BookController {
 	}
 	
 	@GetMapping(value = "/borrow", produces = "application/json;charset=utf-8")
-	public ResponseEntity<List<Book>> borrowBook(@RequestParam(value = "bookId", required = false) Integer bookId,
+	public ResponseEntity<Book> borrowBook(@RequestParam(value = "bookId", required = false) Integer bookId,
 			@RequestParam(value = "memberId", required = false) Integer memberId) {
-		List<Book> bookLi = new ArrayList<>();
+		Book b = null;
 		try {
 			if (bookId != null && memberId != null) {
 				Optional<Book> book = repo.findById(bookId);
@@ -93,7 +93,7 @@ public class BookController {
 				if (book.isPresent() && member.isPresent() && member.get().getBookCount() != null &&
 						member.get().getBookCount() != 0 && book.get().getStatus().equals("Available")) {
 					Member mem = member.get();
-					Book b = book.get();
+					 b = book.get();
 					int count = 1;
 					mem.setBookCount(count + mem.getBookCount());
 					mem.setBookName(b.getTitle());
@@ -102,13 +102,12 @@ public class BookController {
 					b.setStatus("Borrowed");
 					repo.save(b);
 				}
-				return new ResponseEntity<List<Book>>(bookLi, new HttpHeaders(), HttpStatus.OK);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		return new ResponseEntity<List<Book>>(bookLi, new HttpHeaders(), HttpStatus.OK);
+		return new ResponseEntity<Book>(b, new HttpHeaders(), HttpStatus.OK);
 	}
 
 	private String prepareDate(){
